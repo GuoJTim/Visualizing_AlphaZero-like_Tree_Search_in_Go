@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Dashboard Layout</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="script.js" defer></script>
+    <script src="orangeBox.js" defer></script>
+    <script src="blueBox.js" defer></script>
+    <script src="purpleBox.js" defer></script>
+    <script src="greenBox.js" defer></script>
+    <script src="goBoard.js" defer></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const numberOfGames = 5; // Number of game elements to create
+        const sliderContent = d3.select('#sliderContent');
+        const boardSize = 9;
+
+        function createRandomGameMoves() {
+            const boardData = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
+            let moves = 0;
+            while (moves < 5) {
+                const row = Math.floor(Math.random() * boardSize);
+                const col = Math.floor(Math.random() * boardSize);
+                if (boardData[row][col] === 0) {
+                    boardData[row][col] = moves % 2 === 0 ? 1 : -1;
+                    moves++;
+                }
+            }
+            return boardData;
+        }
+
+        for (let i = 0; i < numberOfGames; i++) {
+            const boardData = createRandomGameMoves();
+            const sliderItem = sliderContent.append('div')
+                .attr('class', 'slider-item');
+
+            drawGoBoard(sliderItem, boardData);
+
+            // Append arrow after each element except the last one
+            if (i < numberOfGames - 1) {
+                sliderContent.append('div')
+                    .attr('class', 'slider-arrow')
+                    .style('display', 'inline-block')
+                    .style('vertical-align', 'middle')
+                    .html('&#8594;'); // Right arrow symbol
+            }
+        }
+    });
+</script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 3fr 2fr 1fr;
+            grid-template-rows: 4fr 1fr;
+            gap: 10px;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .orange-box {
+            grid-column: 1;
+            grid-row: 1;
+            border: 3px solid orange;
+            height: 100%;
+        }
+
+        .blue-box {
+            grid-column: 2;
+            grid-row: 1;
+            border: 3px solid blue;
+            height: 100%;
+        }
+
+        .purple-box {
+            grid-column: 3;
+            grid-row: 1;
+            border: 3px solid purple;
+            height: 100%;
+        }
+
+        .green-box {
+            grid-column: 1 / span 3;
+            grid-row: 2;
+            border: 3px solid green;
+            height: 100%;
+            overflow-x: scroll;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-item {
+            display: inline-block;
+            width: 100px;
+            height: 100%;
+            margin: 0 20px;
+            border: 2px solid black;
+            vertical-align: middle;
+        }
+
+        .arrow {
+            display: inline-block;
+            font-size: 2rem;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+
+            .orange-box, .blue-box, .purple-box, .green-box {
+                grid-column: 1;
+                grid-row: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="orange-box" id="orangeBox">
+            <!-- Orange Box Content -->
+        </div>
+        <div class="blue-box" id="blueBox">
+            <!-- Blue Box Content -->
+        </div>
+        <div class="purple-box" id="purpleBox">
+            <!-- Purple Box Content -->
+        </div>
+        <div class="green-box" id="greenBox">
+            <!-- Green Box Content -->
+            
+            <div id="sliderContent"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const sliderContent = d3.select('#sliderContent');
+                    const numberOfGames = 5;
+                    
+                    function createRandomGameMoves() {
+                        const boardSize = 9;
+                        const boardData = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
+                        let moves = 0;
+                        while (moves < 5) {
+                            const row = Math.floor(Math.random() * boardSize);
+                            const col = Math.floor(Math.random() * boardSize);
+                            if (boardData[row][col] === 0) {
+                                boardData[row][col] = moves % 2 === 0 ? 1 : -1;
+                                moves++;
+                            }
+                        }
+                        return boardData;
+                    }
+
+                    for (let i = 0; i < numberOfGames; i++) {
+                        const boardData = createRandomGameMoves();
+                        const sliderItem = sliderContent.append('div')
+                            .attr('class', 'slider-item');
+
+                        drawGoBoard(sliderItem, boardData);
+
+                        // Append arrow after each element except the last one
+                        if (i < numberOfGames - 1) {
+                            sliderContent.append('div')
+                                .attr('class', 'slider-arrow')
+                                .style('display', 'inline-block')
+                                .style('vertical-align', 'middle')
+                                .html('&#8594;'); // Right arrow symbol
+                        }
+                    }
+                });
+            </script>
+            
+        </div>
+    </div>
+</body>
+</html>
