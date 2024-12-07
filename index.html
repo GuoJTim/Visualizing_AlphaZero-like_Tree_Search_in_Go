@@ -7,50 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <script src="index.js" defer></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="orangeBox.js" defer></script>
     <script src="blueBox.js" defer></script>
     <script src="purpleBox.js" defer></script>
     <script src="greenBox.js" defer></script>
-    <script src="goBoard.js" defer></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const numberOfGames = 5; // Number of game elements to create
-        const sliderContent = d3.select('#sliderContent');
-        const boardSize = 9;
-
-        function createRandomGameMoves() {
-            const boardData = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
-            let moves = 0;
-            while (moves < 5) {
-                const row = Math.floor(Math.random() * boardSize);
-                const col = Math.floor(Math.random() * boardSize);
-                if (boardData[row][col] === 0) {
-                    boardData[row][col] = moves % 2 === 0 ? 1 : -1;
-                    moves++;
-                }
-            }
-            return boardData;
-        }
-
-        for (let i = 0; i < numberOfGames; i++) {
-            const boardData = createRandomGameMoves();
-            const sliderItem = sliderContent.append('div')
-                .attr('class', 'slider-item');
-
-            drawGoBoard(sliderItem, boardData);
-
-            // Append arrow after each element except the last one
-            if (i < numberOfGames - 1) {
-                sliderContent.append('div')
-                    .attr('class', 'slider-arrow')
-                    .style('display', 'inline-block')
-                    .style('vertical-align', 'middle')
-                    .html('&#8594;'); // Right arrow symbol
-            }
-        }
-    });
-</script>
+    <script src="goBoard.js?wa" defer></script>
+    <script src="readTree.js" defer></script>
     <style>
         * {
             box-sizing: border-box;
@@ -145,49 +109,111 @@
         </div>
         <div class="green-box" id="greenBox">
             <!-- Green Box Content -->
-            
-            <div id="sliderContent"></div>
             <script>
-                document.addEventListener('DOMContentLoaded', function() {
+                var tmp;
+                </script>
+            <div id="sliderContent"></div>
+            <script type="module">
+                document.addEventListener('DOMContentLoaded', async function () {
+                    const boardSize = 9;
                     const sliderContent = d3.select('#sliderContent');
-                    const numberOfGames = 5;
+                
                     
-                    function createRandomGameMoves() {
-                        const boardSize = 9;
-                        const boardData = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
-                        let moves = 0;
-                        while (moves < 5) {
-                            const row = Math.floor(Math.random() * boardSize);
-                            const col = Math.floor(Math.random() * boardSize);
-                            if (boardData[row][col] === 0) {
-                                boardData[row][col] = moves % 2 === 0 ? 1 : -1;
-                                moves++;
+                
+                    // // Apply a single action to the board
+                    // function applyAction(boardData, action) {
+                    //     console.log(action)
+                    //     if (action === "W[]" || action === "B[]") return;
+                    //     if (action === "W[PASS]" || action === "B[PASS]") return;
+                    //     const { color, row, col } = parseSGFAction(action);
+                    //     console.log(row+" "+col)
+                    //     boardData[row][col] = color;
+                    // }
+                
+                    // Traverse the tree to generate board states
+                    function generateBoardsFromTree(tree) {
+                        
+                        const initialBoard = Array(boardSize)
+                            .fill(0)
+                            .map(() => Array(boardSize).fill(0)); // Empty 9x9 board
+                        // console.log(initialBoard)
+                        const boards = [JSON.parse(JSON.stringify(initialBoard))]; // Start with initial board state
+                        let currentNode = tree;
+                        // console.log(currentNode)
+                        while (currentNode && currentNode.children && currentNode.n > 0) {
+                            // console.log(currentNode.n)
+                            
+                            const action = currentNode.action; // Get SGF action
+                            if (action) {
+                                const newBoard = JSON.parse(JSON.stringify(boards[boards.length - 1])); // Clone last board
+                                applyAction(newBoard, action); // Apply action
+                                boards.push(newBoard); // Add updated board to the list
                             }
+                            // Find the next child node with the highest `n`
+                            currentNode = currentNode.children.reduce((best, child) => {
+                                if (child.n > 0 && (!best || child.n > best.n)) return child;
+                                return best;
+                            }, null);
                         }
-                        return boardData;
+                
+                        return boards;
                     }
-
-                    for (let i = 0; i < numberOfGames; i++) {
-                        const boardData = createRandomGameMoves();
-                        const sliderItem = sliderContent.append('div')
-                            .attr('class', 'slider-item');
-
-                        drawGoBoard(sliderItem, boardData);
-
-                        // Append arrow after each element except the last one
-                        if (i < numberOfGames - 1) {
-                            sliderContent.append('div')
-                                .attr('class', 'slider-arrow')
-                                .style('display', 'inline-block')
-                                .style('vertical-align', 'middle')
-                                .html('&#8594;'); // Right arrow symbol
-                        }
+                
+                    // Draw boards on green-box
+                    function drawBoards(boards) {
+                        sliderContent.selectAll('*').remove(); // Clear previous content
+                
+                        boards.forEach((boardData, step) => {
+                            const sliderItem = sliderContent
+                                .append('div')
+                                .attr('class', 'slider-item');
+                
+                            drawGoBoard(sliderItem, boardData);
+                
+                            // Add arrows between steps
+                            if (step < boards.length - 1) {
+                                sliderContent
+                                    .append('div')
+                                    .attr('class', 'slider-arrow')
+                                    .style('display', 'inline-block')
+                                    .style('vertical-align', 'middle')
+                                    .html('&#8594;'); // Right arrow symbol
+                            }
+                        });
                     }
+                    
+                    const csvFilePath = './game0_move10_game.csv';
+                    fetch(csvFilePath)
+                        .then(response => {
+                            if (!response.ok) throw new Error(`Failed to load CSV file: ${response.statusText}`);
+                            return response.text();
+                        })
+                        .then(content => {
+                            // Parse the CSV
+                            const header = [
+                                'game', 'move', 'step', 'step_id', 'prev', 'color', 
+                                'action', 'q', 'n', 'p', 'v', 'r', 'is_current'
+                            ];
+                            const rows = parseCSV(content);
+                            const data = rows.map(row => header.map((_, index) => row[index] || ''));
+                            // Build the tree
+                            const tree = buildMCTSTree(data);
+                            // Display the tree
+                            // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
+                            tmp = tree
+                            const boards = generateBoardsFromTree(tree[199][0]);
+                            tmp = boards
+                            drawBoards(boards);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            document.getElementById('output').textContent = `Error: ${error.message}`;
+                    });
+
                 });
-            </script>
-            
+                </script>
+                
         </div>
     </div>
-    <script type="module" src="readTree.js"></script>
 </body>
 </html>

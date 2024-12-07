@@ -1,4 +1,4 @@
-const csvFilePath = './game0_move0_game.csv';
+
 
 // Function to parse CSV content into an array of rows
 function parseCSV(content) {
@@ -79,37 +79,4 @@ function buildMCTSTree(data) {
 
 
 
-var tmp;
 // Fetch and process the CSV file
-fetch(csvFilePath)
-    .then(response => {
-        console.log("A??")
-        if (!response.ok) throw new Error(`Failed to load CSV file: ${response.statusText}`);
-        return response.text();
-    })
-    .then(content => {
-        console.log("W??")
-        // Parse the CSV
-        const header = [
-            'game', 'move', 'step', 'step_id', 'prev', 'color', 
-            'action', 'q', 'n', 'p', 'v', 'r', 'is_current'
-        ];
-        console.log("W??")
-        const rows = parseCSV(content);
-        console.log("W??")
-        const data = rows.map(row => header.map((_, index) => row[index] || ''));
-        console.log("W??")
-
-        // Build the tree
-        const tree = buildMCTSTree(data);
-        console.log("W??")
-        tmp = tree
-        // Display the tree
-        // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
-        console.log(tree)
-    })
-    .catch(error => {
-        console.log("O??")
-        console.error('Error:', error);
-        document.getElementById('output').textContent = `Error: ${error.message}`;
-});
