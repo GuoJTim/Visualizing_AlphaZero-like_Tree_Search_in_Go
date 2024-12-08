@@ -15,6 +15,7 @@
     <script src="greenBox.js" defer></script>
     <script src="goBoard.js?wa" defer></script>
     <script src="readTree.js" defer></script>
+    <script src="tree_diagram.js" defer></script>
     <style>
         * {
             box-sizing: border-box;
@@ -83,6 +84,13 @@
             margin: 0 10px;
         }
 
+        .link {
+            stroke: black;
+            stroke-width: 0.01px;
+            fill: none;
+        }
+
+
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -100,6 +108,7 @@
     <div class="container">
         <div class="orange-box" id="orangeBox">
             <!-- Orange Box Content -->
+            <div id="tree_diagram"></div>
         </div>
         <div class="blue-box" id="blueBox">
             <!-- Blue Box Content -->
