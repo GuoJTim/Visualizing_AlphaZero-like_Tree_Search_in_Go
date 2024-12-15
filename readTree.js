@@ -77,6 +77,48 @@ function buildMCTSTree(data) {
     return treesByStep;
 }
 
+// edited by cinsiang
+//==========================================
+function extractChildValuesFromNode(node, valueType) {
+    const values = [];
 
+    // Ensure node exists and has children
+    if (node && node.children) {
+        node.children.forEach(child => {
+            if (child[valueType] !== undefined) { // Use valueType as dynamic key
+                values.push(child[valueType]); // Collect specified values from children
+            }
+        });
+    }
 
+    return values;
+}
+
+// Function to extract specified values for each node in the tree
+function extractValuesFromTree(treesByStep, valueType) {
+    const allValues = {};
+
+    // Iterate through each step in the treesByStep object
+    for (const step in treesByStep) {
+        const stepTree = treesByStep[step];
+        const valuesForStep = [];
+
+        // Iterate through each node in the tree and extract specified values from children
+        for (const nodeId in stepTree) {
+            const node = stepTree[nodeId];
+            const values = extractChildValuesFromNode(node, valueType);
+            valuesForStep.push( values // Dynamically set the key name
+            );
+        }
+
+        allValues[step] = valuesForStep; // Store the extracted values for this step
+    }
+
+    return allValues;
+}
+
+function extractValueFromRoot(tree, valueType) {
+    return tree && tree[valueType] !== undefined ? tree[valueType] : null;
+}
+//==========================================
 // Fetch and process the CSV file

@@ -15,6 +15,10 @@
     <script src="greenBox.js" defer></script>
     <script src="goBoard.js?wa" defer></script>
     <script src="readTree.js" defer></script>
+    <script src="bluegoBoard.js" defer></script>
+    <script src="DrawHeatmap.js" defer></script>
+    <script src="bluestatus.js" defer></script>
+    <script src="drawheatmapbar.js" defer></script>
     <script src="tree_diagram.js" defer></script>
     <style>
         * {
@@ -169,13 +173,22 @@
                     }
                 
                     // Draw boards on green-box
-                    function drawBoards(boards) {
+                    // edited by cinsiang
+                    function drawBoards(boards, nodes, heatmapBoards, colorBoards, root_info, top_info) {
                         sliderContent.selectAll('*').remove(); // Clear previous content
                 
                         boards.forEach((boardData, step) => {
                             const sliderItem = sliderContent
                                 .append('div')
-                                .attr('class', 'slider-item');
+                                .attr('class', 'slider-item')
+                                .on('click', () => {
+                                    console.log('Board clicked'); 
+                                    const blueBox = d3.select('#blueBox');
+                                    blueBox.selectAll('*').remove();
+                                    drawBlueGoBoard(blueBox, boardData, heatmapBoards[step], colorBoards[step], 250);
+                                    drawHeatmapBar(blueBox, colorScale, 300, 20);
+                                    drawStatusBoard(blueBox, root_info, top_info);
+                                });
                 
                             drawGoBoard(sliderItem, boardData);
                 
@@ -209,10 +222,26 @@
                             const tree = buildMCTSTree(data);
                             // Display the tree
                             // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
+                            //edited by cinsiang
+                            //==========================================
+                            const allPValues = extractValuesFromTree(tree, "p");
+                            const Pvalue = allPValues[198].flat();
+                            const allVValues = extractValuesFromTree(tree, "v");
+                            const Vvalue = allVValues[198].flat();
+                            const allActionValues = extractValuesFromTree(tree, "action");
+                            const actions = allActionValues[198].flat();
+                            const root_info = info(tree, 198)
+                            const heatmapBoards = generateHeatmapBoards(actions);
+                            const policycolorBoards = generateColorBoards(actions, Pvalue);
+                            const valuecolorBoards = generateColorBoards(actions, Vvalue);
+                            const top_info = extractTopPValuesAndActions(Pvalue, actions);
+                            //==========================================
                             tmp = tree
                             const boards = generateBoardsFromTree(tree[199][0]);
                             tmp = boards
-                            drawBoards(boards);
+                            // edited by cinsiang
+                            // choose value or policy to draw heatmap: policycolorBoards or valuecolorBoards
+                            drawBoards(boards, null, heatmapBoards, policycolorBoards, root_info, top_info);
                         })
                         .catch(error => {
                             console.error('Error:', error);
