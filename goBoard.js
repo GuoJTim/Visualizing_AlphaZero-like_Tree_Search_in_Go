@@ -72,12 +72,12 @@ function parseSGFAction(action) {
 }
 
 function applyAction(boardData, action) {
-    console.log(action);
+    //console.log(action);
     if (action === "W[]" || action === "B[]") return; // Empty action
     if (action === "W[PASS]" || action === "B[PASS]") return; // Pass action
 
     const { color, row, col } = parseSGFAction(action);
-    console.log(row + " " + col);
+    //console.log(row + " " + col);
 
     // Check if the move is valid
     // if (!isValidMove(boardData, color, row, col)) {

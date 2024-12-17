@@ -8,6 +8,7 @@ const squareSize = 0.5; // 每個方格的邊長，縮小100倍
 const my_board_size = 9;   // 棋盤的行數和列數
 const goBoardWidth = squareSize * my_board_size;
 const goBoardHeight = squareSize * my_board_size;
+const stoneRadius = squareSize * 0.4; // 棋子半徑
 
 // 設定樹狀圖的佈局，大小為 orange-box 的寬高範圍
 //const my_treeLayout = d3.tree().size([height - 50, width - 100]).nodeSize([10, 20]); // 留出邊距
@@ -41,6 +42,26 @@ const my_treeData = {
         }
     ]
 };
+
+function recordPaths(root) {
+    const stack = [{ node: root, path: [root.action || "root"] }]; // 初始化堆疊
+
+    while (stack.length > 0) {
+        const { node, path } = stack.pop(); // 取出當前節點和路徑
+
+        // 紀錄從 root 到目前節點的路徑
+        node.path = path;
+
+        // 如果有子節點，將子節點壓入堆疊，並傳遞更新後的路徑
+        if (node.children) {
+            node.children.forEach(child => {
+                stack.push({ node: child, path: [...path, child.action || "unknown"] });
+            });
+        }
+    }
+
+    return root; // 返回更新後的樹
+}
 function removeEmptyChildren(root) {
     const stack = [root]; // 使用堆疊保存待處理的節點
 
@@ -130,7 +151,18 @@ function buildMCTSTree_diagram(data) {
     return treesByStep;
 }
 
-
+function generateBoardsFromPath(path) {
+    const initialBoard = Array(9)
+                        .fill(0)
+                        .map(() => Array(9).fill(0)); // Empty 9x9 board
+    const boards = [JSON.parse(JSON.stringify(initialBoard))]; // Start with initial board state
+    path.forEach((element, index) => {
+        const newBoard = JSON.parse(JSON.stringify(boards[boards.length - 1])); // Clone last board
+        applyAction(newBoard, element); // Apply action
+        boards.push(newBoard); // Add updated board to the list
+    });
+    return boards[boards.length - 1];
+}
 
 // Fetch and process the CSV file
 
@@ -154,11 +186,14 @@ function fetch_tree_nodes()
             const tree = buildMCTSTree_diagram(data);
             // Display the tree
             // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
-            console.log(tree[199][0]);
+            //console.log(tree[199][0]);
             //const updatedTree = removeEmptyChildren(tree[199][0]);
             //console.log(updatedTree);
             //return updatedTree;
-            return tree[199][0];
+            const updatedTree = recordPaths(tree[199][0]);
+            //console.log(updatedTree);
+            return updatedTree;
+            //return tree[199][0];
             //const boards = generateBoardsFromTree(tree[199][0]);
             //drawBoards(boards);
         })
@@ -217,7 +252,7 @@ node.each(function(d) {
     const nodeSelection = d3.select(this);
 
     if (d.children && d.children.length > 0) {
-        // 如果沒有子節點，畫矩形
+        // 如果有子節點，畫棋盤
         nodeSelection.append("g")
             .attr("class", "goBoard")
             .attr("transform", `translate(${-goBoardWidth / 2},${-goBoardHeight / 2})`) // 將棋盤中心對齊節點位置
@@ -231,14 +266,53 @@ node.each(function(d) {
             .attr("height", squareSize)
             .attr("fill", "#ffffff")
             .attr("stroke", "#ccc")
-            .attr("stroke-width", 0.05) // 可選：添加方格邊框
-    
+            .attr("stroke-width", 0.05);
+        
+        
+        const boards = generateBoardsFromPath(d.data.path);
+
+        // 生成所有棋子位置
+        const allPositions = [];
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (boards[i][j] == 1) { // 如果該位置有棋子
+                    allPositions.push({
+                        x: i, // 行數
+                        y: j, // 列數
+                        color: "black" // "black" 或 "white"
+                    });
+                }
+                else if (boards[i][j] == -1) { // 如果該位置有棋子
+                    allPositions.push({
+                        x: i, // 行數
+                        y: j, // 列數
+                        color: "white" // "black" 或 "white"
+                    });
+                }
+            }
+        }
+
+        // 添加棋子
+        nodeSelection.append("g")
+            .attr("class", "stones")
+            .attr("transform", `translate(${-goBoardWidth / 2},${-goBoardHeight / 2})`) // 與棋盤對齊
+            .selectAll("circle")
+            .data(allPositions)
+            .enter()
+            .append("circle")
+            .attr("cx", d => d.y * squareSize + squareSize / 2) // 棋盤格子的中心
+            .attr("cy", d => d.x * squareSize + squareSize / 2)
+            .attr("r", stoneRadius)
+            .attr("fill", d => d.color === "black" ? "#000000" : "#ffffff")
+            .attr("stroke", "#000000")
+            .attr("stroke-width", 0.05)
+
             nodeSelection.select(".goBoard")
     .on("mouseover", function(event, d) {
         // 顯示 tooltip 並填充內容
         tooltip.style("display", "block")
             .html(`
-                <strong>Name:</strong> ${d.data.name}<br>
+                <strong>Name:</strong> ${d.data.color}<br>
                 <strong>X:</strong> ${d.x.toFixed(2)}<br>
                 <strong>Y:</strong> ${d.y.toFixed(2)}
             `);
@@ -258,7 +332,7 @@ node.each(function(d) {
         // alert(`You clicked on node: ${d.data.name}\nX: ${d.x.toFixed(2)}\nY: ${d.y.toFixed(2)}`);
     });
     } else {
-        // 如果有子節點，畫圓形
+        // 如果沒有子節點，畫圓形
         nodeSelection.append("circle")
             .attr("r", 0.2) // 調整圓形大小
             .attr("fill", "#000000") // 可選：設置顏色
@@ -266,7 +340,7 @@ node.each(function(d) {
                 // 顯示 tooltip 並填充內容
                 tooltip.style("display", "block")
                     .html(`
-                        <strong>Name:</strong> ${d.data.name}<br>
+                        <strong>Name:</strong> ${d.data.color}<br>
                         <strong>X:</strong> ${d.x.toFixed(2)}<br>
                         <strong>Y:</strong> ${d.y.toFixed(2)}
                     `);
@@ -321,8 +395,6 @@ const translateY = -(height * k / 1.3);
 // 應用縮放與平移
 svg.call(zoom.transform, d3.zoomIdentity.translate(50, translateY).scale(10));
 
-
-        console.log(treeNode);
     })
     .catch(error => {
         console.error('Error:', error);
