@@ -165,45 +165,15 @@ function generateBoardsFromPath(path) {
 }
 
 // Fetch and process the CSV file
+const eventTarget = new EventTarget();
 
-const csv_file_path = './game0_move10_game.csv';
-function fetch_tree_nodes()
-{
-    return fetch(csv_file_path)
-        .then(response => {
-            if (!response.ok) throw new Error(`Failed to load CSV file: ${response.statusText}`);
-            return response.text();
-        })
-        .then(content => {
-            // Parse the CSV
-            const header = [
-                'game', 'move', 'step', 'step_id', 'prev', 'color', 
-                'action', 'q', 'n', 'p', 'v', 'r', 'is_current'
-            ];
-            const rows = parseCSV(content);
-            const data = rows.map(row => header.map((_, index) => row[index] || ''));
-            // Build the tree
-            const tree = buildMCTSTree_diagram(data);
-            // Display the tree
-            // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
-            //console.log(tree[199][0]);
-            //const updatedTree = removeEmptyChildren(tree[199][0]);
-            //console.log(updatedTree);
-            //return updatedTree;
-            const updatedTree = recordPaths(tree[199][0]);
-            //console.log(updatedTree);
-            return updatedTree;
-            //return tree[199][0];
-            //const boards = generateBoardsFromTree(tree[199][0]);
-            //drawBoards(boards);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('orangeBox').textContent = `Error: ${error.message}`;
-        });
-}
+let csv_file_path = './game0_move0_game.csv';
 
-fetch_tree_nodes()
+// 監聽事件
+eventTarget.addEventListener('csvPathChange', (event) => {
+    d3.select("#tree_diagram svg").remove();
+    console.log(`Path changed to: ${event.detail.path}`);
+    fetch_tree_nodes_from_json(csv_file_path)
     .then(treeNode => {
         // 將數據轉換為樹狀結構
 const my_root = d3.hierarchy(treeNode);
@@ -313,8 +283,6 @@ node.each(function(d) {
         tooltip.style("display", "block")
             .html(`
                 <strong>Name:</strong> ${d.data.color}<br>
-                <strong>X:</strong> ${d.x.toFixed(2)}<br>
-                <strong>Y:</strong> ${d.y.toFixed(2)}
             `);
     })
     .on("mousemove", function(event) {
@@ -341,8 +309,6 @@ node.each(function(d) {
                 tooltip.style("display", "block")
                     .html(`
                         <strong>Name:</strong> ${d.data.color}<br>
-                        <strong>X:</strong> ${d.x.toFixed(2)}<br>
-                        <strong>Y:</strong> ${d.y.toFixed(2)}
                     `);
             })
             .on("mousemove", function(event) {
@@ -399,5 +365,86 @@ svg.call(zoom.transform, d3.zoomIdentity.translate(50, translateY).scale(10));
     .catch(error => {
         console.error('Error:', error);
     });
+    //fetch_tree_nodes_from_csv(event.detail.path);
+});
+
+// 初次執行
+//fetch_tree_nodes_from_csv(csv_file_path);
+
+// 改變值並觸發事件
+function updateCSVPath(newPath) {
+    csv_file_path = newPath;
+    eventTarget.dispatchEvent(new CustomEvent('csvPathChange', { detail: { path: csv_file_path } }));
+}
+
+// // 觸發變更
+// setTimeout(() => {
+//     updateCSVPath('./game0_move0_game.csv');
+// }, 7000);
+
+// // 觸發變更
+// setTimeout(() => {
+//     updateCSVPath('./game0_move10_game.csv');
+// }, 14000);
+
+//const csv_file_path = './game0_move10_game.csv';
+function fetch_tree_nodes_from_json(csv_file_path)
+{
+    return fetch(csv_file_path)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to load JSON file');
+        }
+        return response.json();  // 自動解析成物件
+    })
+    .then(data => {
+        //console.log(data[0]);  // 輸出 JSON 檔案的內容
+        const updatedTree = recordPaths(data[0]);
+        //console.log(updatedTree);
+        return updatedTree;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+}
+function fetch_tree_nodes_from_csv(csv_file_path)
+{
+    return fetch(csv_file_path)
+        .then(response => {
+            if (!response.ok) throw new Error(`Failed to load CSV file: ${response.statusText}`);
+            return response.text();
+        })
+        .then(content => {
+            // Parse the CSV
+            const header = [
+                'game', 'move', 'step', 'step_id', 'prev', 'color', 
+                'action', 'q', 'n', 'p', 'v', 'r', 'is_current'
+            ];
+            const rows = parseCSV(content);
+            const data = rows.map(row => header.map((_, index) => row[index] || ''));
+            // Build the tree
+            const tree = buildMCTSTree_diagram(data);
+            // Display the tree
+            // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
+            //console.log(tree[199][0]);
+            //const updatedTree = removeEmptyChildren(tree[199][0]);
+            //console.log(updatedTree);
+            //return updatedTree;
+            console.log(tree[199][0]);
+            const updatedTree = recordPaths(tree[199][0]);
+            //console.log(updatedTree);
+            return updatedTree;
+            //return tree[199][0];
+            //const boards = generateBoardsFromTree(tree[199][0]);
+            //drawBoards(boards);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('orangeBox').textContent = `Error: ${error.message}`;
+        });
+}
+
+
 
 
