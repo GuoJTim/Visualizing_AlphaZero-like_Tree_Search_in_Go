@@ -1,3 +1,10 @@
+function scaleToWinRate(value) {
+  // Ensure the input is clamped between -1 and 1
+  const clampedValue = Math.max(-1, Math.min(value, 1));
+  // Scale the value to 0-100%
+  return (clampedValue + 1) * 50; // Shift by +1 and scale by 50
+}
+
 // Function to create a Go board
 function createGoBoard(parentNode, width, height, gridSize, backgroundColor, position, stones) {
   // Create the SVG container for the Go board

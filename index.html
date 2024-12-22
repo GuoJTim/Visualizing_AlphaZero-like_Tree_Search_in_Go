@@ -7,19 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="styles.css">
-    <script src="index.js" defer></script>
+    <script src="index.js?4545" defer></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="orangeBox.js" defer></script>
     <script src="blueBox.js" defer></script>
     <script src="purpleBox.js" defer></script>
     <script src="greenBox.js" defer></script>
-    <script src="goBoard.js?wa" defer></script>
+    <script src="goBoard.js?waa" defer></script>
     <script src="readTree.js" defer></script>
-    <script src="bluegoBoard.js" defer></script>
+    <script src="bluegoBoard.js?1a15123" defer></script>
     <script src="DrawHeatmap.js" defer></script>
-    <script src="bluestatus.js" defer></script>
+    <script src="bluestatus.js?121531" defer></script>
     <script src="drawheatmapbar.js" defer></script>
-    <script src="tree_diagram.js" defer></script>
+    <script src="globalTimer.js" defer></script>
+    <script src="tree_diagram.js?21" defer></script>
     <style>
         * {
             box-sizing: border-box;
@@ -45,6 +46,7 @@
             grid-row: 1;
             border: 3px solid orange;
             height: 100%;
+            width: 100%;
         }
 
         .blue-box {
@@ -106,6 +108,37 @@
                 grid-row: auto;
             }
         }
+        
+        
+        #winrateChart {
+            width: 500px;
+            height: 200px;
+            border: 1px solid #ccc;
+            margin: 20px auto;
+            position: relative;
+            background-color: #000; /* 黑色背景 */
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 10px;
+        }
+        
+        button {
+            padding: 5px 10px;
+            font-size: 16px;
+            border: none;
+            background-color: white;
+            color: purple;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: lightgray;
+        }
+        
     </style>
 </head>
 <body>
@@ -119,6 +152,18 @@
         </div>
         <div class="purple-box" id="purpleBox">
             <!-- Purple Box Content -->
+            <!-- 上半部：折線圖 -->
+            <div id="winrateChart"></div>
+
+            <!-- 下半部：按鈕 -->
+            <div id="controlButtons" class="button-container">
+                <button id="prevMove">&lt;&lt;</button>
+                <button id="prevStep">&lt;</button>
+                <button id="pause">||</button>
+                <button id="resume">|&gt;</button>
+                <button id="nextStep">&gt;</button>
+                <button id="nextMove">&gt;&gt;</button>
+            </div>
         </div>
         <div class="green-box" id="greenBox">
             <!-- Green Box Content -->
@@ -130,125 +175,70 @@
                 document.addEventListener('DOMContentLoaded', async function () {
                     const boardSize = 9;
                     const sliderContent = d3.select('#sliderContent');
-                
                     
-                
-                    // // Apply a single action to the board
-                    // function applyAction(boardData, action) {
-                    //     console.log(action)
-                    //     if (action === "W[]" || action === "B[]") return;
-                    //     if (action === "W[PASS]" || action === "B[PASS]") return;
-                    //     const { color, row, col } = parseSGFAction(action);
-                    //     console.log(row+" "+col)
-                    //     boardData[row][col] = color;
-                    // }
-                
-                    // Traverse the tree to generate board states
-                    function generateBoardsFromTree(tree) {
-                        
-                        const initialBoard = Array(boardSize)
-                            .fill(0)
-                            .map(() => Array(boardSize).fill(0)); // Empty 9x9 board
-                        // console.log(initialBoard)
-                        const boards = [JSON.parse(JSON.stringify(initialBoard))]; // Start with initial board state
-                        let currentNode = tree;
-                        // console.log(currentNode)
-                        while (currentNode && currentNode.children && currentNode.n > 0) {
-                            // console.log(currentNode.n)
-                            
-                            const action = currentNode.action; // Get SGF action
-                            if (action) {
-                                const newBoard = JSON.parse(JSON.stringify(boards[boards.length - 1])); // Clone last board
-                                applyAction(newBoard, action); // Apply action
-                                boards.push(newBoard); // Add updated board to the list
-                            }
-                            // Find the next child node with the highest `n`
-                            currentNode = currentNode.children.reduce((best, child) => {
-                                if (child.n > 0 && (!best || child.n > best.n)) return child;
-                                return best;
-                            }, null);
-                        }
-                
+                    function generateBoardsFromActions(actions) {
+                        const boardSize = 9;
+                        let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(0)); // Initialize an empty board
+                        const boards = []; // List to store board states after each action
+                    
+                        actions.forEach((action, index) => {
+                            applyAction(board, action); // Apply the action to the current board
+                            boards.push(JSON.parse(JSON.stringify(board))); // Save a deep copy of the board state
+                        });
+                    
                         return boards;
                     }
-                
-                    // Draw boards on green-box
-                    // edited by cinsiang
-                    function drawBoards(boards, nodes, heatmapBoards, colorBoards, root_info, top_info) {
-                        sliderContent.selectAll('*').remove(); // Clear previous content
-                
-                        boards.forEach((boardData, step) => {
+                    
+                    function drawBoardsWithClickEvent(boards, actions) {
+                        const sliderContent = d3.select("#sliderContent");
+                        sliderContent.selectAll("*").remove(); // Clear previous content
+                    
+                        boards.forEach((boardData, index) => {
                             const sliderItem = sliderContent
-                                .append('div')
-                                .attr('class', 'slider-item')
-                                .on('click', () => {
-                                    console.log('Board clicked'); 
-                                    const blueBox = d3.select('#blueBox');
-                                    blueBox.selectAll('*').remove();
-                                    drawBlueGoBoard(blueBox, boardData, heatmapBoards[step], colorBoards[step], 250);
-                                    drawHeatmapBar(blueBox, colorScale, 300, 20);
-                                    drawStatusBoard(blueBox, root_info, top_info);
-                                    //updateCSVPath('./game0_move10_game.csv');
-                                    updateCSVPath('./game0_move00_step199.json');
+                                .append("div")
+                                .attr("class", "slider-item")
+                                .on("click", () => {
+                                    
+                                    setMoveAndStep(index,200);
+                                    console.log(`Board clicked: Move ${index}, Action: ${actions[index]}`);
+                                    // Add custom click logic here
                                 });
-                
-                            drawGoBoard(sliderItem, boardData);
-                
-                            // Add arrows between steps
-                            if (step < boards.length - 1) {
+                    
+                            drawGoBoard(sliderItem, boardData); // Draw the Go board for the current move
+                    
+                            // Add arrows between boards
+                            if (index < boards.length - 1) {
                                 sliderContent
-                                    .append('div')
-                                    .attr('class', 'slider-arrow')
-                                    .style('display', 'inline-block')
-                                    .style('vertical-align', 'middle')
-                                    .html('&#8594;'); // Right arrow symbol
+                                    .append("div")
+                                    .attr("class", "slider-arrow")
+                                    .style("display", "inline-block")
+                                    .style("vertical-align", "middle")
+                                    .html("&#8594;"); // Right arrow symbol
                             }
                         });
                     }
                     
-                    const csvFilePath = './game0_move10_game.csv';
-                    fetch(csvFilePath)
-                        .then(response => {
-                            if (!response.ok) throw new Error(`Failed to load CSV file: ${response.statusText}`);
-                            return response.text();
-                        })
-                        .then(content => {
-                            // Parse the CSV
-                            const header = [
-                                'game', 'move', 'step', 'step_id', 'prev', 'color', 
-                                'action', 'q', 'n', 'p', 'v', 'r', 'is_current'
-                            ];
-                            const rows = parseCSV(content);
-                            const data = rows.map(row => header.map((_, index) => row[index] || ''));
-                            // Build the tree
-                            const tree = buildMCTSTree(data);
-                            // Display the tree
-                            // document.getElementById('output').textContent = JSON.stringify(tree, null, 2);
-                            //edited by cinsiang
-                            //==========================================
-                            const allPValues = extractValuesFromTree(tree, "p");
-                            const Pvalue = allPValues[198].flat();
-                            const allVValues = extractValuesFromTree(tree, "v");
-                            const Vvalue = allVValues[198].flat();
-                            const allActionValues = extractValuesFromTree(tree, "action");
-                            const actions = allActionValues[198].flat();
-                            const root_info = info(tree, 198)
-                            const heatmapBoards = generateHeatmapBoards(actions);
-                            const policycolorBoards = generateColorBoards(actions, Pvalue);
-                            const valuecolorBoards = generateColorBoards(actions, Vvalue);
-                            const top_info = extractTopPValuesAndActions(Pvalue, actions);
-                            //==========================================
-                            tmp = tree
-                            const boards = generateBoardsFromTree(tree[199][0]);
-                            tmp = boards
-                            // edited by cinsiang
-                            // choose value or policy to draw heatmap: policycolorBoards or valuecolorBoards
-                            drawBoards(boards, null, heatmapBoards, policycolorBoards, root_info, top_info);
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            document.getElementById('output').textContent = `Error: ${error.message}`;
-                    });
+                    // Provided actions list
+                    const actions = [
+                        "B[E5]","W[E7]","B[G6]","W[G7]","B[C6]","W[F6]","B[F5]","W[G5]","B[H6]",
+                        "W[G4]","B[H7]","W[G8]","B[C7]","W[H8]","B[F3]","W[G3]","B[G2]","W[F4]",
+                        "B[E4]","W[F2]","B[E3]","W[H2]","B[E6]","W[F7]","B[E2]","W[G1]","B[D8]",
+                        "W[E8]","B[E1]","W[D7]","B[C8]","W[D6]","B[D5]","W[E9]","B[F1]","W[G2]",
+                        "B[J8]","W[H5]","B[D9]","W[J6]","B[B2]","W[J7]","B[B4]","W[C5]","B[C4]",
+                        "W[G6]","B[F9]","W[G9]","B[B6]","W[D3]","B[A8]","W[F8]","B[J1]","W[H3]",
+                        "B[B8]","W[J5]","B[J9]","W[H9]","B[B3]","W[B7]","B[C3]","W[H1]","B[C2]",
+                        "W[J3]","B[A3]","W[J2]","B[A6]","W[H4]","B[A2]","W[B1]","B[A7]","W[F9]",
+                        "B[C9]","W[J9]","B[D4]","W[B5]","B[H6]","W[B9]","B[A9]","W[PASS]","B[A5]",
+                        "W[C5]","B[B9]","W[PASS]","B[C1]","W[PASS]","B[D2]","W[PASS]","B[A1]","W[H7]",
+                        "B[B5]","W[PASS]","B[D1]","W[J4]","B[B1]","W[PASS]","B[PASS]"
+                    ];
+                    
+                    // Generate boards based on actions
+                    const boards = generateBoardsFromActions(actions);
+                    
+                    // Draw all boards and set up click events
+                    drawBoardsWithClickEvent(boards, actions);
+                    
 
                 });
                 </script>
