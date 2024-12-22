@@ -15,7 +15,19 @@ const colorScale_v = d3.scaleLinear()
 //     .domain([-1, 0, 1])
 //     .range(['red', 'white', 'blue']);
 
-function drawBlueGoBoard_p(container, boardData, heatmapData, policycolorData, size = 250) {
+function drawBlueGoBoard_p(container, boardData, currentData, heatmapData, policycolorData, size = 250) {
+    d3.select('#tooltip').remove();
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('id', 'tooltip')
+        .style('position', 'absolute')
+        .style('background-color', 'white')
+        .style('border', '1px solid black')
+        .style('border-radius', '4px')
+        .style('padding', '5px')
+        .style('display', 'none')
+        .style('pointer-events', 'none')
+        .style('font-size', '12px');
     const gridSize = size / 9; 
     const padding = gridSize; 
     const totalSize = size + padding; 
@@ -50,7 +62,20 @@ function drawBlueGoBoard_p(container, boardData, heatmapData, policycolorData, s
                     .attr('y', i * gridSize) 
                     .attr('width', gridSize)
                     .attr('height', gridSize)
-                    .attr('fill', fillcolor);
+                    .attr('fill', fillcolor)
+                    .on('mouseover', function(event) {
+                        tooltip.style('display', 'block')
+                               .style('left', `${event.pageX + 10}px`)
+                               .style('top', `${event.pageY + 10}px`)
+                               .html(`Policy: ${(colorpolicy*100).toFixed(4)}%`);
+                    })
+                    .on('mousemove', function(event) {
+                        tooltip.style('left', `${event.pageX + 10}px`)
+                               .style('top', `${event.pageY + 10}px`);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.style('display', 'none');
+                    });
             }
         }
     }
@@ -79,6 +104,14 @@ function drawBlueGoBoard_p(container, boardData, heatmapData, policycolorData, s
                     .attr('cy', i * gridSize + gridSize / 2)
                     .attr('r', gridSize / 3)
                     .attr('fill', 'black');
+                if (currentData[i][j] === 1) {
+                    // black
+                    svg.append('circle')
+                        .attr('cx', (j + 1) * gridSize + gridSize / 2)
+                        .attr('cy', i * gridSize + gridSize / 2)
+                        .attr('r', gridSize / 6)
+                        .attr('fill', 'green');
+                }
             } else if (boardData[i][j] === -1) {
                 // white 
                 svg.append('circle')
@@ -88,6 +121,14 @@ function drawBlueGoBoard_p(container, boardData, heatmapData, policycolorData, s
                     .attr('fill', 'white')
                     .attr('stroke', 'black')
                     .attr('stroke-width', 1);
+                if (currentData[i][j] === 1) {
+                    // black
+                    svg.append('circle')
+                        .attr('cx', (j + 1) * gridSize + gridSize / 2)
+                        .attr('cy', i * gridSize + gridSize / 2)
+                        .attr('r', gridSize / 6)
+                        .attr('fill', 'green');
+                }
             }
         }
     }
@@ -118,18 +159,21 @@ function drawBlueGoBoard_p(container, boardData, heatmapData, policycolorData, s
             .style('front-family', 'Times New Romans, serif')
             .text(letters[j]);
     }
-    svg.append('text')
-    .text('*Click blue board to change policy to value.')
-    .attr('x', 10) // 设置文字的 x 坐标
-    .attr('y', 280) // 设置文字的 y 坐标
-    .attr('font-size', '14px') // 设置字体大小
-    .attr('fill', 'black') // 设置文字颜色
-    .attr('text-anchor', 'start') // 确保文字从左开始对齐
-    .style('font-family', 'Times New Roman, serif'); // 设置字体样式
-
 }
 
-function drawBlueGoBoard_v(container, boardData, heatmapData, policycolorData, size = 250) {
+function drawBlueGoBoard_v(container, boardData, currentData, heatmapData, policycolorData, size = 250) {
+    d3.select('#tooltip').remove();
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('id', 'tooltip')
+        .style('position', 'absolute')
+        .style('background-color', 'white')
+        .style('border', '1px solid black')
+        .style('border-radius', '4px')
+        .style('padding', '5px')
+        .style('display', 'none')
+        .style('pointer-events', 'none')
+        .style('font-size', '12px');
     const gridSize = size / 9; 
     const padding = gridSize; 
     const totalSize = size + padding; 
@@ -137,6 +181,7 @@ function drawBlueGoBoard_v(container, boardData, heatmapData, policycolorData, s
     // create svg container
     let svg = container.select('svg');
     if (svg.empty()) {
+        console.log("!")
         svg = container.append('svg')
             .attr('width', size + padding) 
             .attr('height', size + padding) 
@@ -164,7 +209,20 @@ function drawBlueGoBoard_v(container, boardData, heatmapData, policycolorData, s
                     .attr('y', i * gridSize) 
                     .attr('width', gridSize)
                     .attr('height', gridSize)
-                    .attr('fill', fillcolor);
+                    .attr('fill', fillcolor)
+                    .on('mouseover', function(event) {
+                        tooltip.style('display', 'block')
+                               .style('left', `${event.pageX + 10}px`)
+                               .style('top', `${event.pageY + 10}px`)
+                               .html(`Value: ${(colorpolicy).toFixed(4)}`);
+                    })
+                    .on('mousemove', function(event) {
+                        tooltip.style('left', `${event.pageX + 10}px`)
+                               .style('top',`${event.pageY + 10}px`);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.style('display', 'none');
+                    });
             }
         }
     }
@@ -193,6 +251,14 @@ function drawBlueGoBoard_v(container, boardData, heatmapData, policycolorData, s
                     .attr('cy', i * gridSize + gridSize / 2)
                     .attr('r', gridSize / 3)
                     .attr('fill', 'black');
+                if (currentData[i][j] === 1) {
+                    // black
+                    svg.append('circle')
+                        .attr('cx', (j + 1) * gridSize + gridSize / 2)
+                        .attr('cy', i * gridSize + gridSize / 2)
+                        .attr('r', gridSize / 6)
+                        .attr('fill', 'green');
+                }
             } else if (boardData[i][j] === -1) {
                 // white 
                 svg.append('circle')
@@ -202,6 +268,14 @@ function drawBlueGoBoard_v(container, boardData, heatmapData, policycolorData, s
                     .attr('fill', 'white')
                     .attr('stroke', 'black')
                     .attr('stroke-width', 1);
+                if (currentData[i][j] === 1) {
+                    // black
+                    svg.append('circle')
+                        .attr('cx', (j + 1) * gridSize + gridSize / 2)
+                        .attr('cy', i * gridSize + gridSize / 2)
+                        .attr('r', gridSize / 6)
+                        .attr('fill', 'green');
+                }
             }
         }
     }
@@ -279,4 +353,20 @@ function generateColorBoards(actions, Value) {
     });
 
     return boards;
+}
+
+function generateCurrentColorBoard(action, fixedValue) {
+    const initialBoard = Array(boardSize)
+        .fill(0)
+        .map(() => Array(boardSize).fill(0)); // Empty 9x9 board
+
+    if (action === "W[PASS]" || action === "B[PASS]" || action === "W[]" || action === "B[]") return initialBoard; // Skip Pass action and return empty board
+
+    // Parse the action to determine the position
+    const { color, row, col } = parseSGFAction(action);
+    console.log(action)
+    // Update the board with the fixed value at the specified position
+    initialBoard[row][col] = fixedValue;
+
+    return initialBoard;
 }

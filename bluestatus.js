@@ -4,19 +4,20 @@ function drawPolicyStatusBoard(container, root_info, top_info) {
     if (statusBoard.empty()) {
         statusBoard = container.append('div')
             .attr('class', 'status-board')
-            .style('width', '175px')
-            .style('height', '400px')
+            .style('width', '100%')
+            .style('height', '100%')
             .style('padding', '10px')
             .style('border', '0px solid black')
-            .style('position', 'absolute')
-            .style('left', '70%') 
+            .style('align-content', 'center')
+            .style('left', '50%') 
             .style('top', '17.5%')
             .style('background-color', 'white')
             .style('font-family', 'Times New Roman, serif')
-            .style('font-size', '20px');
+            .style('font-size', '16px');
     } else {
         statusBoard.html(''); // 清空现有内容
     }
+    
     if (top_info[0].action[0] === 'B') {
         statusBoard.append('div')
         .text('Black Round')
@@ -29,24 +30,20 @@ function drawPolicyStatusBoard(container, root_info, top_info) {
         .style('font-size', '25px')
         .style('font-weight', 'bold');
     }
+    statusBoard.append('div').html(`<strong>Value:</strong> ${root_info.v.toFixed(3)}`);
+    statusBoard.append('div').html(`<strong>Action:</strong> ${root_info.action}`);
     statusBoard.append('div')
-        .html(`<strong>Value:</strong> ${(root_info.v*100).toFixed(4)}%`);
+        statusBoard.append('div')
+        .html(`<strong>Black Winrate:</strong> ${((root_info.v+1)*50).toFixed(2)}%`);
     statusBoard.append('div').html('&nbsp;'); 
     statusBoard.append('div')
         .html(`<strong>Top 3 Policy:</strong>`);
         top_info.forEach(({ policy, action}, index) => {
             statusBoard.append('div')
-                .text(`${index + 1}. ${action.substring(2, 4)} (${(policy*100).toFixed(4)}%)`)
+                .text(`${index + 1}. ${action.substring(2, action.indexOf(']'))} (${(policy*100).toFixed(2)}%)`)
                 .style('font-size', '19px')
         });
 
-    statusBoard.append('div')
-        .text('=============')
-        .style('margin-top', '10px');
-    statusBoard.append('div')
-        .html(`<strong>Counts left:</strong> ${(root_info.n)}`);
-        statusBoard.append('div')
-        .text(`Q: ${(root_info.q).toFixed(4)}`);
 }
 
 function drawValueStatusBoard(container, root_info, top_info) {
@@ -55,16 +52,16 @@ function drawValueStatusBoard(container, root_info, top_info) {
     if (statusBoard.empty()) {
         statusBoard = container.append('div')
             .attr('class', 'status-board')
-            .style('width', '175px')
-            .style('height', '400px')
+            .style('width', '100%')
+            .style('height', '100%')
             .style('padding', '10px')
             .style('border', '0px solid black')
-            .style('position', 'absolute')
-            .style('left', '70%') 
+            .style('align-content', 'center')
+            .style('left', '50%') 
             .style('top', '17.5%')
             .style('background-color', 'white')
             .style('font-family', 'Times New Roman, serif')
-            .style('font-size', '20px');
+            .style('font-size', '16px');
     } else {
         statusBoard.html(''); // 清空现有内容
     }
@@ -81,24 +78,17 @@ function drawValueStatusBoard(container, root_info, top_info) {
         .style('font-weight', 'bold');
     }
     statusBoard.append('div')
-        .html(`<strong>Policy:</strong> ${(root_info.p*100).toFixed(4)}%`);
+        .html(`<strong>Policy:</strong> ${(root_info.p*100).toFixed(2)}%`);
+    statusBoard.append('div').html(`<strong>Action:</strong> ${root_info.action}`);
     statusBoard.append('div').html('&nbsp;'); 
     statusBoard.append('div')
         .html(`<strong>Bottom 3 Value:</strong>`);
         top_info.forEach(({ value, action}, index) => {
             statusBoard.append('div')
-                .text(`${index + 1}. ${action.substring(2, 4)} (${(value*100).toFixed(4)}%)`)
+                .text(`${index + 1}. ${action.substring(2, action.indexOf(']'))} (${(value.toFixed(3))})`)
                 .style('font-size', '19px')
         });
 
-    statusBoard.append('div')
-        .text('=============')
-        .style('margin-top', '10px');
-    statusBoard.append('div')
-        .html(`<strong>Counts left:</strong> ${(root_info.n)}`);
-        statusBoard.append('div')
-        .text(`Q: ${(root_info.q).toFixed(4)}`);
-    
 }
 
 function info(tree) {
@@ -106,11 +96,13 @@ function info(tree) {
     const p = extractValueFromRoot(tree, "p");
     const q = extractValueFromRoot(tree, "q");
     const n = extractValueFromRoot(tree, "n");
+    const action = extractValueFromRoot(tree, "action");
     return {
         n,
         v,
         q,
         p,
+        action,
         //result.get("v")
         get: function (key) {
             return this[key] !== undefined ? this[key] : null;

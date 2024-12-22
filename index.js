@@ -104,43 +104,43 @@ const treeData = {
   ]
 };
 
-// Create tree layout
-const treeLayout = d3.tree().size([1200, 600]);
+// // Create tree layout
+// const treeLayout = d3.tree().size([1200, 600]);
 
-// Create root node for the tree
-const root = d3.hierarchy(treeData);
+// // Create root node for the tree
+// const root = d3.hierarchy(treeData);
 
-// Apply the tree layout
-const treeDataLayout = treeLayout(root);
+// // Apply the tree layout
+// const treeDataLayout = treeLayout(root);
 
-// Create an SVG container for the tree structure
-const svgTree = d3.select("body")
-  .append("svg")
-  .attr("width", 1200)
-  .attr("height", 600);
+// // Create an SVG container for the tree structure
+// const svgTree = d3.select("body")
+//   .append("svg")
+//   .attr("width", 1200)
+//   .attr("height", 600);
 
-// Add links (lines) between tree nodes
-svgTree.selectAll(".link")
-  .data(treeDataLayout.links())
-  .enter()
-  .append("line")
-  .attr("class", "link")
-  .attr("x1", d => d.source.x)
-  .attr("y1", d => d.source.y)
-  .attr("x2", d => d.target.x)
-  .attr("y2", d => d.target.y)
-  .attr("stroke", "black")
-  .attr("stroke-width", 2);
+// // Add links (lines) between tree nodes
+// svgTree.selectAll(".link")
+//   .data(treeDataLayout.links())
+//   .enter()
+//   .append("line")
+//   .attr("class", "link")
+//   .attr("x1", d => d.source.x)
+//   .attr("y1", d => d.source.y)
+//   .attr("x2", d => d.target.x)
+//   .attr("y2", d => d.target.y)
+//   .attr("stroke", "black")
+//   .attr("stroke-width", 2);
 
-// Add nodes (tree nodes) and call createGoBoard for each node
-const nodes = svgTree.selectAll(".node")
-  .data(treeDataLayout.descendants())
-  .enter()
-  .append("g")
-  .attr("class", "node")
-  .attr("transform", d => `translate(${d.x}, ${d.y})`);
+// // Add nodes (tree nodes) and call createGoBoard for each node
+// const nodes = svgTree.selectAll(".node")
+//   .data(treeDataLayout.descendants())
+//   .enter()
+//   .append("g")
+//   .attr("class", "node")
+//   .attr("transform", d => `translate(${d.x}, ${d.y})`);
 
-// For each node, create the Go board
-nodes.each(function(d) {
-  createGoBoard(d3.select(this), d.data.size.width, d.data.size.height, d.data.gridSize, d.data.backgroundColor, d.data.position, d.data.stones);
-});
+// // For each node, create the Go board
+// nodes.each(function(d) {
+//   createGoBoard(d3.select(this), d.data.size.width, d.data.size.height, d.data.gridSize, d.data.backgroundColor, d.data.position, d.data.stones);
+// });

@@ -71,13 +71,14 @@ async function triggerGlobalTimerChangeEvent() {
 
 // Start the global timer
 function startGlobalTimer(intervalTime) {
+    changeWinrateChart(globalTimer.move);
     globalTimer.interval = setInterval(() => {
         globalTimer.step += 1;
 
         if (globalTimer.step >= globalTimer.maxSteps) {
             globalTimer.step = 0;
             globalTimer.move += 1;
-
+            changeWinrateChart(globalTimer.move);
             if (globalTimer.move >= globalTimer.maxMoves) {
                 clearInterval(globalTimer.interval);
                 console.log("Timer stopped: Maximum moves reached.");
@@ -111,6 +112,7 @@ function setMoveAndStep(move, step) {
     globalTimer.move = Math.min(Math.max(0, move), globalTimer.maxMoves - 1); // Clamp move to valid range
     globalTimer.step = Math.min(Math.max(0, step), globalTimer.maxSteps - 1); // Clamp step to valid range
     triggerGlobalTimerChangeEvent();
+    changeWinrateChart(globalTimer.move);
 }
 
 // Move to the previous move
@@ -121,6 +123,7 @@ function previousMove() {
         globalTimer.step = 0; // Reset step to 0 for new move
         triggerGlobalTimerChangeEvent();
     }
+    changeWinrateChart(globalTimer.move);
 }
 
 // Move to the next move
@@ -131,6 +134,7 @@ function nextMove() {
         globalTimer.step = 0; // Reset step to 0 for new move
         triggerGlobalTimerChangeEvent();
     }
+    changeWinrateChart(globalTimer.move);
 }
 
 // Move to the previous step
@@ -143,6 +147,7 @@ function previousStep() {
         globalTimer.step = globalTimer.maxSteps - 1; // Move to the last step of the previous move
     }
     triggerGlobalTimerChangeEvent();
+    changeWinrateChart(globalTimer.move);
 }
 
 // Move to the next step
@@ -155,6 +160,7 @@ function nextStep() {
         globalTimer.step = 0; // Move to the first step of the next move
     }
     triggerGlobalTimerChangeEvent();
+    changeWinrateChart(globalTimer.move);
 }
 
 

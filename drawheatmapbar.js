@@ -1,3 +1,4 @@
+
 //Draw heatmap bar
 function drawHeatmapBar(container, colorScale, width = 150, height = 5) {
     // Create or select the SVG container for the heatmap bar

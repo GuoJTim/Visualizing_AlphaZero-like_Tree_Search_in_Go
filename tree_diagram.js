@@ -2,7 +2,7 @@
 const orangeBox = document.getElementById("orangeBox");
 const width = orangeBox.clientWidth; // 容器的寬度
 const height = orangeBox.clientHeight; // 容器的高度
-
+var isPolicyView;
 // 定義節點的棋盤大小
 const squareSize = 0.5; // 每個方格的邊長，縮小100倍
 const my_board_size = 9;   // 棋盤的行數和列數
@@ -12,12 +12,12 @@ const stoneRadius = squareSize * 0.4; // 棋子半徑
 
 // 設定樹狀圖的佈局，大小為 orange-box 的寬高範圍
 //const my_treeLayout = d3.tree().size([height - 50, width - 100]).nodeSize([10, 20]); // 留出邊距
-const my_treeLayout = d3.tree().size([height - 50, width - 100]).separation((a, b) => {
+const my_treeLayout = d3.tree().size([height - 50, 200]).separation((a, b) => {
     const aHasChildren = a.children && a.children.length > 0;
     const bHasChildren = b.children && b.children.length > 0;
 
     if (aHasChildren || bHasChildren) {
-        return 10; // 如果至少有一個節點有子節點，間距較大
+        return 30; // 如果至少有一個節點有子節點，間距較大
     }
     return 0.5; // 如果兩個節點都沒有子節點，間距較小
 });
@@ -303,7 +303,8 @@ eventTarget.addEventListener('globalTimerChange', (event) => {
             // 點擊事件，顯示 alert
             // alert(`You clicked on node: ${d.data.name}\nX: ${d.x.toFixed(2)}\nY: ${d.y.toFixed(2)}`);
             console.log("clicked");
-            const blueBox = d3.select('#blueBox');
+            const blueBox = d3.select('#gochart');
+            const chartinfo = d3.select('#chartinfo');
             blueBox.selectAll('*').remove();
             console.log(d.data);
             const Pvalue = extractChildValuesFromNode(d.data, "p");
@@ -316,27 +317,36 @@ eventTarget.addEventListener('globalTimerChange', (event) => {
             const top_info = extractTopPValuesAndActions(Pvalue, actions);
             const root_info = info(d.data);
             console.log(heatmapBoards);
+            isPolicyView = false;
+            const currentBoards = generateCurrentColorBoard(root_info.action, 1);
+            // isPolicyView = false;
             // console.log(policycolorBoards);
-            drawBlueGoBoard_p(blueBox, boards, heatmapBoards[heatmapBoards.length-1], policycolorBoards[policycolorBoards.length-1], 250);
+            drawBlueGoBoard_p(blueBox, boards, currentBoards, heatmapBoards[heatmapBoards.length-1], policycolorBoards[policycolorBoards.length-1], 250);
             drawHeatmapBar(blueBox, colorScale_p, 300, 20);
-            drawPolicyStatusBoard(blueBox, root_info, top_info);
-            d3.select('#blueBox').on('click', function() {
-                const blueBox = d3.select('#blueBox');
+            drawPolicyStatusBoard(chartinfo, root_info, top_info);
+            d3.select('#gochart').on('dblclick', function() {
+                const blueBox = d3.select('#gochart');
+                const chartinfo = d3.select('#chartinfo');
                 blueBox.selectAll('*').remove();
+                
+                if (!isPolicyView){
+                    isPolicyView = true;
+                    const top_info = extractTopVValuesAndActions(Vvalue, actions);
+                    drawBlueGoBoard_v(blueBox, boards, currentBoards, heatmapBoards[heatmapBoards.length-1], valuecolorBoards[valuecolorBoards.length-1], 250);
+                    drawHeatmapBar(blueBox, colorScale_v, 300, 20);
+                    drawValueStatusBoard(chartinfo, root_info, top_info);
 
-                const Pvalue = extractChildValuesFromNode(d.data, "p");
-                // console.log(Pvalue);
-                const Vvalue = extractChildValuesFromNode(d.data, "v");
-                const actions = extractChildValuesFromNode(d.data, "action");
-                const heatmapBoards = generateHeatmapBoards(actions);
-                const policycolorBoards = generateColorBoards(actions, Pvalue);
-                const valuecolorBoards = generateColorBoards(actions, Vvalue);
-                const top_info = extractTopVValuesAndActions(Vvalue, actions);
-                const root_info = info(d.data);
-                // console.log(heatmapBoards)
-                drawBlueGoBoard_v(blueBox, boards, heatmapBoards[heatmapBoards.length-1], valuecolorBoards[valuecolorBoards.length-1], 250);
-                drawHeatmapBar(blueBox, colorScale_v, 300, 20);
-                drawValueStatusBoard(blueBox, root_info, top_info);
+                }else{
+                    isPolicyView = false;
+                    const top_info = extractTopPValuesAndActions(Pvalue, actions);
+                    // console.log(heatmapBoards)
+                    drawBlueGoBoard_p(blueBox, boards, currentBoards, heatmapBoards[heatmapBoards.length-1], policycolorBoards[policycolorBoards.length-1], 250);
+                    drawHeatmapBar(blueBox, colorScale_p, 300, 20);
+                    drawPolicyStatusBoard(chartinfo, root_info, top_info);
+                }
+
+                
+
             });
     
         });
